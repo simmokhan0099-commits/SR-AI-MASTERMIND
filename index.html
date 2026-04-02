@@ -1,0 +1,543 @@
+<!-- GitHub Copilot Chat Assistant -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>SR-AI MASTERMIND v1.0</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Tailwind custom theme extension for neon/glass accents (via CDN config)
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            neon: {
+              blue: '#5ee7ff',
+              purple: '#8b5cf6',
+              cyan: '#06b6d4'
+            },
+            glass: 'rgba(255,255,255,0.04)'
+          },
+          boxShadow: {
+            'neon-sm': '0 4px 18px rgba(99,102,241,0.12), 0 0 20px rgba(99,102,241,0.12)',
+            'neon-lg': '0 10px 40px rgba(80,70,250,0.12), 0 0 60px rgba(99,102,241,0.12)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide icons -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide/dist/lucide.min.js"></script>
+
+  <style>
+    /* Global dark glassmorphism + font setup */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+
+    :root{
+      --bg:#0b1020;
+      --glass: rgba(255,255,255,0.04);
+      --card: rgba(255,255,255,0.03);
+      --neon-blue: #4ee1ff;
+      --neon-purple: #b084ff;
+      --accent: linear-gradient(135deg,var(--neon-blue),var(--neon-purple));
+      --glass-border: rgba(255,255,255,0.06);
+      --danger: #ff5c7c;
+      --success: #4ade80;
+    }
+
+    html,body{
+      height:100%;
+      background: radial-gradient(800px 400px at 10% 10%, rgba(72,61,255,0.06), transparent),
+                  radial-gradient(600px 300px at 90% 90%, rgba(3,218,197,0.03), transparent),
+                  var(--bg);
+      color:#cfe9ff;
+      font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+    }
+
+    /* Center container */
+    .app {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+      box-sizing: border-box;
+    }
+
+    /* Main card */
+    .card {
+      width: 100%;
+      max-width: 1100px;
+      border-radius: 20px;
+      padding: 20px;
+      backdrop-filter: blur(10px) saturate(130%);
+      background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.015));
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 8px 40px rgba(2,6,23,0.7), 0 0 40px rgba(82,63,255,0.06);
+      display: grid;
+      gap: 18px;
+      grid-template-columns: 1fr;
+    }
+
+    /* Header */
+    .header {
+      display:flex;
+      align-items:center;
+      gap:14px;
+      justify-content:space-between;
+    }
+    .brand {
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    .logo {
+      width:56px;
+      height:56px;
+      border-radius:14px;
+      padding:8px;
+      background: linear-gradient(135deg, rgba(78,225,255,0.08), rgba(176,133,255,0.06));
+      border:1px solid rgba(255,255,255,0.04);
+      display:grid;
+      place-items:center;
+      box-shadow: 0 6px 20px rgba(108,99,255,0.06), inset 0 0 18px rgba(78,225,255,0.02);
+    }
+    .title {
+      font-weight:800;
+      font-size:18px;
+      letter-spacing:0.6px;
+      color: #eaf6ff;
+    }
+    .subtitle { font-size:12px; color: #9fc6ff; opacity:0.85; }
+
+    /* Layout split for mobile-first: stacked, on md: grid two columns */
+    .grid {
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:16px;
+    }
+    @media (min-width:900px){
+      .card { padding:28px; grid-template-columns: 1fr; }
+      .grid { grid-template-columns: 420px 1fr; align-items:start; }
+    }
+
+    /* Left panel */
+    .panel {
+      border-radius:14px;
+      padding:16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.03);
+      box-shadow: var(--tw-shadow, 0 6px 20px rgba(6,8,20,0.5));
+    }
+
+    /* Avatar */
+    .avatar-wrap {
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      align-items:center;
+    }
+    .avatar-frame {
+      width:180px;
+      height:180px;
+      border-radius:999px;
+      padding:8px;
+      background: linear-gradient(135deg, rgba(78,225,255,0.06), rgba(176,133,255,0.06));
+      box-shadow: 0 8px 40px rgba(130,94,255,0.06), inset 0 0 36px rgba(78,225,255,0.04);
+      position:relative;
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+    }
+    .avatar-inner {
+      width:100%;
+      height:100%;
+      border-radius:999px;
+      background: radial-gradient(circle at 30% 30%, rgba(78,225,255,0.26), transparent 15%),
+                  radial-gradient(circle at 70% 70%, rgba(176,133,255,0.22), transparent 20%),
+                  linear-gradient(180deg, rgba(6,8,20,0.6), rgba(6,8,20,0.85));
+      display:grid;
+      place-items:center;
+      position:relative;
+      overflow:hidden;
+      transform-style:preserve-3d;
+    }
+    /* rotating pseudo-3D orb canvas */
+    canvas#avatarCanvas {
+      width: 100%;
+      height: 100%;
+      display:block;
+      border-radius:999px;
+    }
+    .avatar-label { font-weight:700; font-size:13px; color:#d8eeff; text-align:center; }
+
+    /* toggles list */
+    .toggles { display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+    .toggle {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px;
+      border-radius:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+      border:1px solid rgba(255,255,255,0.02);
+    }
+    .toggle .name { font-weight:600; color:#d8eeff; }
+    .switch {
+      --w:56px;
+      --h:30px;
+      width:var(--w);
+      height:var(--h);
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:999px;
+      padding:4px;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border:1px solid rgba(255,255,255,0.04);
+      position:relative;
+      cursor:pointer;
+      transition: all 250ms cubic-bezier(.2,.9,.3,1);
+    }
+    .switch .knob {
+      width:22px;
+      height:22px;
+      border-radius:999px;
+      background:linear-gradient(180deg,#0b1222,#031022);
+      box-shadow: 0 6px 16px rgba(2,6,23,0.7), 0 0 12px rgba(99,102,241,0.06);
+      transform: translateX(0);
+      transition: transform 260ms cubic-bezier(.2,.9,.3,1), background 260ms;
+    }
+    .switch.on {
+      background: linear-gradient(90deg, rgba(78,225,255,0.14), rgba(176,133,255,0.12));
+      border-color: rgba(120,89,255,0.35);
+    }
+    .switch.on .knob { transform: translateX(26px); background: radial-gradient(circle at 30% 30%, #c5fbff, #b084ff); box-shadow: 0 6px 20px rgba(120,89,255,0.14), 0 0 18px rgba(78,225,255,0.12); }
+
+    /* Right panel: terminal + controls */
+    .terminal {
+      border-radius:12px;
+      padding:12px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.42), rgba(4,6,12,0.45));
+      border: 1px solid rgba(255,255,255,0.03);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+      color: #cbe8ff;
+      height: 340px;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    .term-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .chips { display:flex; gap:8px; align-items:center; }
+    .chip {
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.03);
+      color:#aee6ff;
+    }
+    .term-body {
+      overflow:auto;
+      flex:1;
+      padding:8px;
+      border-radius:8px;
+      background: linear-gradient(180deg, rgba(2,6,23,0.25), rgba(2,6,23,0.12));
+      border:1px dashed rgba(255,255,255,0.02);
+      box-shadow: inset 0 0 40px rgba(0,0,0,0.6);
+    }
+    .log-line {
+      font-size:13px;
+      line-height:1.5;
+      white-space:pre-wrap;
+      color:#bfe9ff;
+      opacity:0.95;
+    }
+    .log-meta { color:#7fd3ff; opacity:0.85; margin-right:8px; font-weight:600; }
+    .term-controls {
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin-top:10px;
+    }
+
+    /* Buttons */
+    .btn {
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 14px;
+      border-radius:12px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      color:#dff8ff;
+      font-weight:700;
+      border:1px solid rgba(255,255,255,0.03);
+      cursor:pointer;
+      transition: transform 160ms ease, box-shadow 160ms;
+      user-select:none;
+    }
+    .btn:active{ transform: translateY(1px) scale(0.997); }
+    .btn-accent {
+      background: var(--accent);
+      color:#031022;
+      box-shadow: 0 8px 36px rgba(88,94,255,0.18);
+      border: none;
+    }
+    .btn-danger {
+      background: linear-gradient(90deg, rgba(255,92,124,0.14), rgba(255,92,124,0.08));
+      color: var(--danger);
+      border:1px solid rgba(255,92,124,0.06);
+    }
+    .btn-ghost {
+      background: transparent;
+      border:1px solid rgba(255,255,255,0.04);
+      color:#bfe9ff;
+    }
+    .big {
+      padding:14px 18px;
+      font-size:15px;
+      border-radius:14px;
+    }
+
+    /* toasts */
+    #toastContainer { position: fixed; right: 18px; bottom: 18px; z-index:9999; display:flex; flex-direction:column; gap:10px; }
+    .toast {
+      min-width:220px;
+      max-width:360px;
+      padding:12px 14px;
+      border-radius:12px;
+      background: linear-gradient(180deg, rgba(15,23,42,0.88), rgba(8,12,20,0.88));
+      color:#e8f8ff;
+      border:1px solid rgba(255,255,255,0.03);
+      box-shadow: 0 10px 30px rgba(3,8,23,0.7), 0 0 8px rgba(78,225,255,0.04);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      animation: slideUp 320ms cubic-bezier(.2,.9,.3,1);
+    }
+    @keyframes slideUp { from { transform: translateY(8px); opacity:0 } to { transform: translateY(0); opacity:1 } }
+
+    /* modal */
+    .modal-backdrop {
+      position: fixed;
+      inset:0;
+      background: rgba(3,6,18,0.6);
+      display:grid;
+      place-items:center;
+      z-index:50;
+      backdrop-filter: blur(6px);
+    }
+    .modal {
+      width: 92%;
+      max-width:560px;
+      border-radius:14px;
+      padding:18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.03);
+    }
+
+    /* small helper */
+    .muted { color:#93c5ff; opacity:0.8; font-size:13px; }
+    .status-dot { width:10px; height:10px; border-radius:999px; display:inline-block; margin-right:8px; box-shadow:0 6px 16px rgba(78,225,255,0.06); }
+    .status-online { background: linear-gradient(90deg,var(--neon-blue),var(--neon-purple)); }
+    .kbd {
+      padding:6px 8px;
+      border-radius:8px;
+      background: rgba(255,255,255,0.02);
+      border:1px solid rgba(255,255,255,0.03);
+      font-weight:700;
+      color:#dff8ff;
+      font-size:12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <main class="card" role="application" aria-label="SR-AI MASTERMIND v1.0 Dashboard">
+      <div class="header">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" style="filter: drop-shadow(0 8px 30px rgba(99,102,241,0.06))">
+              <defs></defs>
+              <rect x="3" y="3" width="18" height="18" rx="6" fill="url(#g)"></rect>
+              <defs>
+                <linearGradient id="g" x1="0" x2="1">
+                  <stop offset="0" stop-color="#4ee1ff"></stop>
+                  <stop offset="1" stop-color="#b084ff"></stop>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div>
+            <div class="title">SR-AI MASTERMIND <span class="muted">v1.0</span></div>
+            <div class="subtitle">God-Mode Master Dashboard · Dark Glassmorphism UI</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:center">
+          <div class="chip" id="statusChip"><span class="status-dot status-online" aria-hidden="true"></span><span id="sysStatusText">Idle</span></div>
+          <button class="btn btn-ghost" id="settingsBtn" title="Settings (no-op)"> <svg data-lucide="settings" width="16" height="16"></svg> Settings</button>
+        </div>
+      </div>
+
+      <section class="grid" aria-live="polite">
+        <!-- LEFT: Avatar + Toggles + Action Buttons -->
+        <aside class="panel" aria-label="Controls Panel">
+          <div class="avatar-wrap">
+            <div class="avatar-frame" role="img" aria-label="SR-AI Avatar">
+              <div class="avatar-inner" id="avatarInner">
+                <canvas id="avatarCanvas" width="540" height="540" title="SR-AI Avatar"></canvas>
+              </div>
+            </div>
+            <div class="avatar-label">SR-AI Avatar — Virtual Core</div>
+
+            <div class="toggles" role="group" aria-label="3D Engine Toggles">
+              <div class="toggle" data-key="godMode">
+                <div>
+                  <div class="name">God Mode</div>
+                  <div class="muted">Unlock full capabilities</div>
+                </div>
+                <div class="switch" tabindex="0" role="switch" aria-checked="false" data-state="off">
+                  <div class="knob" aria-hidden="true"></div>
+                </div>
+              </div>
+
+              <div class="toggle" data-key="fastInference">
+                <div>
+                  <div class="name">Fast Inference</div>
+                  <div class="muted">Accelerated model paths</div>
+                </div>
+                <div class="switch" tabindex="0" role="switch" aria-checked="false" data-state="off">
+                  <div class="knob" aria-hidden="true"></div>
+                </div>
+              </div>
+
+              <div class="toggle" data-key="deepResearch">
+                <div>
+                  <div class="name">Deep Research</div>
+                  <div class="muted">Extended context & retrieval</div>
+                </div>
+                <div class="switch" tabindex="0" role="switch" aria-checked="false" data-state="off">
+                  <div class="knob" aria-hidden="true"></div>
+                </div>
+              </div>
+            </div>
+
+            <div style="width:100%;display:flex;flex-direction:row;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center">
+              <button id="deployBtn" class="btn btn-accent big" title="Deploy AI"><svg data-lucide="rocket" width="18" height="18"></svg> Deploy AI</button>
+              <button id="clearBtn" class="btn btn-danger big" title="Clear Memory"><svg data-lucide="trash" width="18" height="18"></svg> Clear Memory</button>
+            </div>
+
+            <div style="width:100%;display:flex;gap:10px;margin-top:10px;justify-content:center">
+              <button id="overrideBtn" class="btn btn-ghost big" title="Override System"><svg data-lucide="zap" width="16" height="16"></svg> Override System</button>
+            </div>
+
+            <div style="margin-top:12px;text-align:center" class="muted">Pro Tip: Toggle engines, then hit Deploy to see live logs and avatar feedback.</div>
+          </div>
+        </aside>
+
+        <!-- RIGHT: Terminal + Controls -->
+        <section class="panel" aria-label="Terminal & Controls">
+          <div class="term-header">
+            <div style="display:flex;flex-direction:column">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div class="chip"><svg data-lucide="cpu" width="14" height="14"></svg> Core</div>
+                <div class="chip"><svg data-lucide="wind" width="14" height="14"></svg> Engine</div>
+                <div class="chip"><svg data-lucide="shield" width="14" height="14"></svg> Sandbox</div>
+              </div>
+              <div class="muted" style="margin-top:6px">Live Terminal · System Logs</div>
+            </div>
+
+            <div style="display:flex;gap:8px;align-items:center">
+              <div class="muted">Speed</div>
+              <input id="speedRange" type="range" min="200" max="2000" step="50" value="900" aria-label="Log speed slider">
+              <button id="pauseBtn" class="btn btn-ghost" title="Pause/Resume Logs"><svg data-lucide="pause" width="16" height="16"></svg></button>
+              <button id="clearLogsBtn" class="btn btn-ghost" title="Clear Terminal"><svg data-lucide="trash-2" width="16" height="16"></svg></button>
+            </div>
+          </div>
+
+          <div class="terminal" id="terminal" role="log" aria-live="polite">
+            <div class="term-body" id="termBody" tabindex="0" aria-label="System logs window"></div>
+            <div class="term-controls">
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button id="copyLogsBtn" class="btn btn-ghost"><svg data-lucide="copy" width="14" height="14"></svg> Copy Logs</button>
+                <button id="downloadLogsBtn" class="btn btn-ghost"><svg data-lucide="download" width="14" height="14"></svg> Download</button>
+                <button id="injectBtn" class="btn btn-ghost" title="Inject custom log">Inject Log</button>
+              </div>
+
+              <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+                <div class="muted">Memory</div>
+                <div class="kbd" id="memoryKb">--</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+            <button id="quickAction1" class="btn btn-ghost"><svg data-lucide="zap" width="14" height="14"></svg> Quick Boost</button>
+            <button id="quickAction2" class="btn btn-ghost"><svg data-lucide="eye" width="14" height="14"></svg> Introspect</button>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <!-- Toasts container -->
+  <div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Modal placeholder -->
+  <div id="modalRoot" aria-hidden="true"></div>
+
+  <script>
+    // Initialize lucide icons
+    document.addEventListener('DOMContentLoaded', ()=>{ if(window.lucide) lucide.replace(); });
+
+    // Application state
+    const state = {
+      godMode: false,
+      fastInference: false,
+      deepResearch: false,
+      deployed: false,
+      paused: false,
+      logInterval: 900,
+      memoryKB: 0,
+      logs: [],
+      avatarSpeed: 0.6,
+    };
+
+    // DOM refs
+    const switches = Array.from(document.querySelectorAll('.toggle'));
+    const deployBtn = document.getElementById('deployBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const overrideBtn = document.getElementById('overrideBtn');
+    const termBody = document.getElementById('termBody');
+    const speedRange = document.getElementById('speedRange');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const clearLogsBtn = document.getElementById('clearLogsBtn');
+    const copyLogsBtn = document.getElementById('copyLogsBtn');
+    const downloadLogsBtn = document.getElementById('downloadLogsBtn');
+    const injectBtn = document.getElementById('injectBtn');
+    const memoryKb = document.getElementById('memoryKb');
+    const statusChip = document.getElementById('statusChip');
+    const sysStatusText = document.getElementById('sysStatusText');
+    const toastContainer = document.getElementById('toastContainer');
+    const modalRoot = document.getElementById('modalRoot');
+
+    // Utility: toast
+    function toast(message, opts = {}) {
+      const {type='info', duration=4200} = opts;
+      const t = d
