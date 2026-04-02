@@ -6,12 +6,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Build Android APK
-        uses: simple-elf/github-action-pwa-to-apk@v1
+        uses: Chethan-S/pwa-to-apk-action@v1.0.1
         with:
-          # Ye link automatically tumhare project ko utha lega
-          url: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
-          name: SR-AI Mastermind
+          # Isse tumhari live website ka APK banega
+          pwa_url: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+          app_name: "SR AI Mastermind"
+          app_id: "com.srai.mastermind"
           
