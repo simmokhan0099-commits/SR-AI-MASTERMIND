@@ -6,12 +6,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Build Android APK
-        uses: khofany/pwa-to-apk@v1
+        # Hum ek stable aur live robot use kar rahe hain
+        uses: floscha/pwa-to-apk-action@v1
         with:
-          # Humne direct link daal diya hai taaki robot confuse na ho
-          url: https://simmokhan0099-commits.github.io/SR-AI-MASTERMIND/
+          url: "https://simmokhan0099-commits.github.io/SR-AI-MASTERMIND/"
           name: "SR AI Mastermind"
           
