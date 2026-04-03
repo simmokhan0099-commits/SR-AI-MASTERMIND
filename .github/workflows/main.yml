@@ -1,9 +1,6 @@
-name: Build Android APK from PWA
-
+name: Build SR-AI APK
 on:
   push:
-    branches: [ main ]
-  pull_request:
     branches: [ main ]
   workflow_dispatch:
 
@@ -36,9 +33,7 @@ jobs:
 
       - name: Generate Android APK from PWA
         run: |
-          bubblewrap init \
-            --manifest=https://simmokhan0099-commits.github.io/SR-AI-MASTERMIND/manifest.json \
-            --directory=./pwa-apk
+          bubblewrap init --manifest=https://simmokhan0099-commits.github.io/SR-AI-MASTERMIND/manifest.json --directory=./pwa-apk
           cd ./pwa-apk
           bubblewrap build
 
@@ -47,9 +42,4 @@ jobs:
         with:
           name: SR-AI-Mastermind-APK
           path: ./pwa-apk/app-release-unsigned.apk
-          retention-days: 30
-
-      - name: Display Build Info
-        run: |
-          echo "✅ APK built successfully!"
-          ls -lh ./pwa-apk/app-release-unsigned.apk
+          
