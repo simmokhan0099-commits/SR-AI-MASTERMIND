@@ -1,4 +1,5 @@
-name: Build SR-AI APK
+name: Build Android APK from PWA
+
 on:
   push:
     branches: [ main ]
@@ -11,31 +12,26 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up JDK
+      - name: Set up JDK (Bina Cache ke)
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: 'gradle'
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-
-      - name: Install Android SDK
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y android-sdk
+          node-version: '20'
 
       - name: Install Bubblewrap
         run: npm install --global @bubblewrap/cli
 
       - name: Generate Android APK from PWA
         run: |
-          bubblewrap init --manifest=https://simmokhan0099-commits.github.io/SR-AI-MASTERMIND/manifest.json --directory=./pwa-apk
+          mkdir -p ./pwa-apk
+          yes | bubblewrap init --manifest=https://simmokhan0099-commits.github.io/SR-AI-MASTERMIND/manifest.json --directory=./pwa-apk
           cd ./pwa-apk
-          bubblewrap build
+          yes | bubblewrap build
 
       - name: Upload APK as Artifact
         uses: actions/upload-artifact@v4
