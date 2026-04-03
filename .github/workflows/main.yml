@@ -1,5 +1,11 @@
-name: Build SR-AI APK
-on: [push]
+name: Build Android APK from PWA
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -8,10 +14,42 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Build Android APK
-        # Hum ek stable aur live robot use kar rahe hain
-        uses: floscha/pwa-to-apk-action@v1
+      - name: Set up JDK
+        uses: actions/setup-java@v4
         with:
-          url: "https://simmokhan0099-commits.github.io/SR-AI-MASTERMIND/"
-          name: "SR AI Mastermind"
-          
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Android SDK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y android-sdk
+
+      - name: Install Bubblewrap
+        run: npm install --global @bubblewrap/cli
+
+      - name: Generate Android APK from PWA
+        run: |
+          bubblewrap init \
+            --manifest=https://simmokhan0099-commits.github.io/SR-AI-MASTERMIND/manifest.json \
+            --directory=./pwa-apk
+          cd ./pwa-apk
+          bubblewrap build
+
+      - name: Upload APK as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SR-AI-Mastermind-APK
+          path: ./pwa-apk/app-release-unsigned.apk
+          retention-days: 30
+
+      - name: Display Build Info
+        run: |
+          echo "✅ APK built successfully!"
+          ls -lh ./pwa-apk/app-release-unsigned.apk
